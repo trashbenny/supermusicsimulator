@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUPER MUSIC SIMULATOR EXPERIENCE</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Press Start 2P', monospace;
+            background: #000;
+            color: #e8e8e8;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            width: min(100vw, 100vh);
+            height: min(100vw, 100vh);
+            max-width: 600px;
+            max-height: 600px;
+            position: relative;
+            background: #0a0a0a;
+        }
+        
+        /* Title Screen */
+        .title-screen {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        
+        .title-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .badge {
+            position: relative;
+            width: 220px;
+            height: 220px;
+        }
+        
+        .badge-circle {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: #6b3a3a;
+            border: 6px solid #d4d4d4;
+            image-rendering: pixelated;
+            box-shadow: 
+                inset 0 0 50px rgba(0,0,0,0.4),
+                0 0 30px rgba(107, 58, 58, 0.3);
+        }
+        
+        .badge-text-curved {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .badge-text-curved svg {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .badge-text-curved text {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            fill: #e8e8e8;
+            letter-spacing: 4px;
+        }
+        
+        .badge-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .badge-center h1 {
+            font-size: 15px;
+            line-height: 1.4;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+        }
+        
+        .kaomoji {
+            margin-top: 12px;
+            font-size: 10px;
+            opacity: 0.8;
+        }
+        
+        .press-start {
+            margin-top: 35px;
+            font-size: 10px;
+            animation: blink 1s step-end infinite;
+            cursor: pointer;
+        }
+        
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        
+        /* Menu Screen */
+        .menu-screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        
+        .menu-screen.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Marquee border frame */
+        .marquee-frame {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .marquee-track {
+            position: absolute;
+            background: #6b3a3a;
+            overflow: hidden;
+        }
+        
+        /* Outer layer - English */
+        .marquee-track.top.outer {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 18px;
+        }
+        
+        .marquee-track.bottom.outer {
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 18px;
+        }
+        
+        .marquee-track.left.outer {
+            top: 18px;
+            bottom: 18px;
+            left: 0;
+            width: 18px;
+        }
+        
+        .marquee-track.right.outer {
+            top: 18px;
+            bottom: 18px;
+            right: 0;
+            width: 18px;
+        }
+        
+        /* Inner layer - Japanese */
+        .marquee-track.top.inner {
+            top: 18px;
+            left: 18px;
+            right: 18px;
+            height: 16px;
+        }
+        
+        .marquee-track.bottom.inner {
+            bottom: 18px;
+            left: 18px;
+            right: 18px;
+            height: 16px;
+        }
+        
+        .marquee-track.left.inner {
+            top: 34px;
+            bottom: 34px;
+            left: 18px;
+            width: 16px;
+        }
+        
+        .marquee-track.right.inner {
+            top: 34px;
+            bottom: 34px;
+            right: 18px;
+            width: 16px;
+        }
+        
+        .marquee-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Main content */
+        .menu-content {
+            position: absolute;
+            top: 34px;
+            left: 34px;
+            right: 34px;
+            bottom: 34px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+        
+        /* Scanlines overlay */
+        .menu-content::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.1) 2px,
+                rgba(0,0,0,0.1) 4px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        
+        .header-jp {
+            font-size: 5px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .header-katakana {
+            font-size: 22px;
+            background: #6b3a3a;
+            padding: 6px 16px;
+            margin-bottom: 6px;
+            letter-spacing: 4px;
+        }
+        
+        .header-en {
+            font-size: 14px;
+            letter-spacing: 3px;
+        }
+        
+        /* Sections */
+        .section {
+            margin-bottom: 14px;
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .section-label {
+            font-size: 5px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        
+        .section-title {
+            font-size: 9px;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        
+        /* Track list */
+        .track-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            text-align: left;
+            padding: 0 5px;
+        }
+        
+        .track {
+            font-size: 6px;
+            padding: 5px 8px;
+            cursor: pointer;
+            transition: all 0.1s;
+            border: 2px solid transparent;
+            pointer-events: auto;
+        }
+        
+        .track.disabled {
+            color: #444;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        .track:not(.disabled):hover {
+            background: rgba(107, 58, 58, 0.3);
+        }
+        
+        .track.selected {
+            border: 2px solid #e8e8e8;
+            background: rgba(107, 58, 58, 0.2);
+        }
+        
+        .track.focusable:focus {
+            outline: none;
+            background: rgba(107, 58, 58, 0.4);
+        }
+        
+        /* Color palette */
+        .palette-options {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+        }
+        
+        .palette {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.1s;
+            pointer-events: auto;
+        }
+        
+        .palette:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .palette.selected {
+            border-color: #e8e8e8;
+        }
+        
+        .palette.selected::before {
+            content: '▶';
+            font-size: 6px;
+            margin-right: 4px;
+        }
+        
+        .palette:focus {
+            outline: none;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .color-swatch {
+            width: 14px;
+            height: 14px;
+            image-rendering: pixelated;
+        }
+        
+        /* Toggle options */
+        .toggle-options {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .toggle-option {
+            font-size: 8px;
+            padding: 5px 10px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: all 0.1s;
+            border: 2px solid transparent;
+            pointer-events: auto;
+        }
+        
+        .toggle-option:hover {
+            opacity: 0.8;
+        }
+        
+        .toggle-option.selected {
+            opacity: 1;
+            border-color: #e8e8e8;
+        }
+        
+        .toggle-option:focus {
+            outline: none;
+            opacity: 1;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Start button */
+        .start-btn {
+            margin-top: auto;
+            padding-bottom: 5px;
+        }
+        
+        .start-btn-label {
+            font-size: 5px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        
+        .start-btn-text {
+            font-size: 12px;
+            cursor: pointer;
+            padding: 8px 16px;
+            transition: all 0.1s;
+            letter-spacing: 3px;
+            pointer-events: auto;
+        }
+        
+        .start-btn-text:hover,
+        .start-btn-text:focus {
+            background: #6b3a3a;
+            transform: scale(1.05);
+            outline: none;
+        }
+        
+        /* Color themes */
+        .theme-red .marquee-track,
+        .theme-red .header-katakana,
+        .theme-red .start-btn-text:hover { background: #6b3a3a; }
+        .theme-red .marquee-text { color: #2a1515; }
+        
+        .theme-teal .marquee-track,
+        .theme-teal .header-katakana,
+        .theme-teal .start-btn-text:hover { background: #3a6b6b; }
+        .theme-teal .marquee-text { color: #152a2a; }
+        .theme-teal .track.selected,
+        .theme-teal .track:hover { background: rgba(58, 107, 107, 0.3); }
+        
+        .theme-purple .marquee-track,
+        .theme-purple .header-katakana,
+        .theme-purple .start-btn-text:hover { background: #5a3a6b; }
+        .theme-purple .marquee-text { color: #231529; }
+        .theme-purple .track.selected,
+        .theme-purple .track:hover { background: rgba(90, 58, 107, 0.3); }
+        
+        /* NGBC (low quality) mode */
+        .quality-ngbc {
+            image-rendering: pixelated;
+        }
+        
+        .quality-ngbc .menu-content {
+            filter: blur(0.5px);
+        }
+        
+        .quality-ngbc * {
+            font-smooth: never;
+            -webkit-font-smoothing: none;
+        }
+    </style>
+</head>
+<body class="theme-red">
+    <div class="container">
+        <!-- Title Screen -->
+        <div class="title-screen" id="titleScreen">
+            <div class="badge">
+                <div class="badge-circle"></div>
+                <div class="badge-text-curved">
+                    <svg viewBox="0 0 220 220">
+                        <defs>
+                            <path id="curve" d="M 25,110 A 85,85 0 0,1 195,110" fill="transparent"/>
+                        </defs>
+                        <text>
+                            <textPath href="#curve" startOffset="50%" text-anchor="middle">
+                                SUPER MUSIC
+                            </textPath>
+                        </text>
+                    </svg>
+                </div>
+                <div class="badge-center">
+                    <h1>SIMULATOR<br>EXPERIENCE</h1>
+                    <div class="kaomoji">╲( *・ω・ )╱</div>
+                </div>
+            </div>
+            <div class="press-start" id="pressStart">PRESS START</div>
+        </div>
+        
+        <!-- Menu Screen -->
+        <div class="menu-screen" id="menuScreen">
+            <!-- Marquee border - Outer layer (English) -->
+            <div class="marquee-frame">
+                <div class="marquee-track top outer"><canvas class="marquee-canvas"></canvas></div>
+                <div class="marquee-track bottom outer"><canvas class="marquee-canvas"></canvas></div>
+                <div class="marquee-track left outer"><canvas class="marquee-canvas"></canvas></div>
+                <div class="marquee-track right outer"><canvas class="marquee-canvas"></canvas></div>
+                
+                <!-- Inner layer (Japanese) -->
+                <div class="marquee-track top inner"><canvas class="marquee-canvas"></canvas></div>
+                <div class="marquee-track bottom inner"><canvas class="marquee-canvas"></canvas></div>
+                <div class="marquee-track left inner"><canvas class="marquee-canvas"></canvas></div>
+                <div class="marquee-track right inner"><canvas class="marquee-canvas"></canvas></div>
+            </div>
+            
+            <div class="menu-content">
+                <div class="header">
+                    <div class="header-jp">「消灯する」</div>
+                    <div class="header-katakana">ドッグブラッド</div>
+                    <div class="header-en">DOG BLOOD</div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-label">トラックを選択</div>
+                    <div class="section-title">SELECT TRACK</div>
+                    <div class="track-list">
+                        <div class="track disabled" data-track="1">1. BREAK LAW</div>
+                        <div class="track disabled" data-track="3">3. KOKOE (with Otira)</div>
+                        <div class="track selected" data-track="2" tabindex="0">2. 4 MIND (with josh pan and X&G)</div>
+                        <div class="track disabled" data-track="4">4. TURN OFF THE LIGHTS</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-label">カラーパレット</div>
+                    <div class="section-title">COLOUR PALETTE</div>
+                    <div class="palette-options">
+                        <div class="palette selected" data-theme="red" tabindex="0">
+                            <div class="color-swatch" style="background: #6b3a3a;"></div>
+                            <div class="color-swatch" style="background: #2a1515;"></div>
+                        </div>
+                        <div class="palette" data-theme="teal" tabindex="0">
+                            <div class="color-swatch" style="background: #3a6b6b;"></div>
+                            <div class="color-swatch" style="background: #152a2a;"></div>
+                        </div>
+                        <div class="palette" data-theme="purple" tabindex="0">
+                            <div class="color-swatch" style="background: #5a3a6b;"></div>
+                            <div class="color-swatch" style="background: #231529;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-label">トラックを選択</div>
+                    <div class="section-title">QUALITY</div>
+                    <div class="toggle-options">
+                        <div class="toggle-option" data-quality="ngbc" tabindex="0">NGBC</div>
+                        <div class="toggle-option selected" data-quality="hd" tabindex="0">HD</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-label">言語</div>
+                    <div class="section-title">LANGUAGE</div>
+                    <div class="toggle-options">
+                        <div class="toggle-option selected" data-lang="en" tabindex="0">EN</div>
+                        <div class="toggle-option" data-lang="jp" tabindex="0">JP</div>
+                    </div>
+                </div>
+                
+                <div class="start-btn">
+                    <div class="start-btn-label">行こう</div>
+                    <div class="start-btn-text" id="startGame" tabindex="0">START</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============ MARQUEE SYSTEM ============
+        const MARQUEE_TEXT_EN = 'SUPER MUSIC SIMULATOR EXPERIENCE · ';
+        const MARQUEE_TEXT_JP = 'スーパーミュージックシミュレーター体験 · ';
+        
+        const marquees = [];
+        
+        class Marquee {
+            constructor(canvas, text, speed, isVertical, fontSize, color) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.text = text;
+                this.speed = speed;
+                this.isVertical = isVertical;
+                this.fontSize = fontSize;
+                this.color = color;
+                this.offset = 0;
+                this.textWidth = 0;
+                this.resize();
+            }
+            
+            resize() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.canvas.style.width = rect.width + 'px';
+                this.canvas.style.height = rect.height + 'px';
+                
+                this.ctx.scale(dpr, dpr);
+                this.ctx.font = `${this.fontSize}px "Press Start 2P", monospace`;
+                this.ctx.fillStyle = this.color;
+                this.ctx.textBaseline = 'middle';
+                
+                this.textWidth = this.ctx.measureText(this.text).width;
+                this.width = rect.width;
+                this.height = rect.height;
+            }
+            
+            update(dt) {
+                this.offset += this.speed * dt;
+                
+                // Wrap offset seamlessly
+                if (this.isVertical) {
+                    if (Math.abs(this.offset) >= this.textWidth) {
+                        this.offset = this.offset % this.textWidth;
+                    }
+                } else {
+                    if (Math.abs(this.offset) >= this.textWidth) {
+                        this.offset = this.offset % this.textWidth;
+                    }
+                }
+            }
+            
+            draw() {
+                const dpr = window.devicePixelRatio || 1;
+                this.ctx.clearRect(0, 0, this.canvas.width / dpr, this.canvas.height / dpr);
+                
+                if (this.isVertical) {
+                    this.ctx.save();
+                    this.ctx.translate(this.width / 2 + this.fontSize / 3, 0);
+                    this.ctx.rotate(Math.PI / 2);
+                    
+                    let x = this.offset;
+                    // Draw enough copies to fill the height
+                    const copies = Math.ceil(this.height / this.textWidth) + 2;
+                    for (let i = -1; i < copies; i++) {
+                        this.ctx.fillText(this.text, x + i * this.textWidth, 0);
+                    }
+                    
+                    this.ctx.restore();
+                } else {
+                    let x = this.offset;
+                    // Draw enough copies to fill the width
+                    const copies = Math.ceil(this.width / this.textWidth) + 2;
+                    for (let i = -1; i < copies; i++) {
+                        this.ctx.fillText(this.text, x + i * this.textWidth, this.height / 2);
+                    }
+                }
+            }
+        }
+        
+        function initMarquees() {
+            const tracks = document.querySelectorAll('.marquee-track');
+            const textColor = getComputedStyle(document.body).getPropertyValue('--marquee-color') || '#2a1515';
+            
+            tracks.forEach(track => {
+                const canvas = track.querySelector('.marquee-canvas');
+                const isOuter = track.classList.contains('outer');
+                const isVertical = track.classList.contains('left') || track.classList.contains('right');
+                const isTop = track.classList.contains('top');
+                const isLeft = track.classList.contains('left');
+                
+                const text = isOuter ? MARQUEE_TEXT_EN : MARQUEE_TEXT_JP;
+                const fontSize = isOuter ? 6 : 5;
+                
+                // Determine direction (clockwise for outer, counter-clockwise for inner)
+                let speed;
+                if (isOuter) {
+                    // Clockwise: top goes left(-), right goes down(+), bottom goes right(+), left goes up(-)
+                    if (isTop) speed = -30;
+                    else if (track.classList.contains('bottom')) speed = 30;
+                    else if (isLeft) speed = -30;
+                    else speed = 30; // right
+                } else {
+                    // Counter-clockwise: opposite
+                    if (isTop) speed = 25;
+                    else if (track.classList.contains('bottom')) speed = -25;
+                    else if (isLeft) speed = 25;
+                    else speed = -25; // right
+                }
+                
+                const marquee = new Marquee(canvas, text, speed, isVertical, fontSize, '#2a1515');
+                marquees.push(marquee);
+            });
+        }
+        
+        let lastTime = 0;
+        function animateMarquees(time) {
+            const dt = (time - lastTime) / 1000;
+            lastTime = time;
+            
+            marquees.forEach(m => {
+                m.update(dt);
+                m.draw();
+            });
+            
+            requestAnimationFrame(animateMarquees);
+        }
+        
+        // Initialize after fonts load
+        document.fonts.ready.then(() => {
+            initMarquees();
+            requestAnimationFrame(animateMarquees);
+        });
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            marquees.forEach(m => m.resize());
+        });
+        
+        // ============ AUDIO SYSTEM ============
+        // Audio context for UI sounds
+        let audioCtx = null;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playBeep(freq = 800, duration = 0.05, type = 'square') {
+            if (!audioCtx) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+        
+        function playSelect() {
+            playBeep(600, 0.08);
+        }
+        
+        function playConfirm() {
+            playBeep(800, 0.05);
+            setTimeout(() => playBeep(1000, 0.08), 60);
+        }
+        
+        function playStart() {
+            playBeep(400, 0.1);
+            setTimeout(() => playBeep(600, 0.1), 100);
+            setTimeout(() => playBeep(800, 0.15), 200);
+        }
+        
+        function playBack() {
+            playBeep(300, 0.1);
+        }
+        
+        // Elements
+        const titleScreen = document.getElementById('titleScreen');
+        const menuScreen = document.getElementById('menuScreen');
+        const pressStart = document.getElementById('pressStart');
+        
+        // All focusable elements in order
+        const focusableElements = [
+            document.querySelector('.track[data-track="2"]'),
+            ...document.querySelectorAll('.palette'),
+            ...document.querySelectorAll('[data-quality]'),
+            ...document.querySelectorAll('[data-lang]'),
+            document.getElementById('startGame')
+        ];
+        
+        let currentFocusIndex = -1;
+        
+        function goToMenu() {
+            titleScreen.classList.add('hidden');
+            setTimeout(() => {
+                menuScreen.classList.add('visible');
+                currentFocusIndex = 0;
+                focusableElements[0]?.focus();
+            }, 300);
+        }
+        
+        function goToTitle() {
+            menuScreen.classList.remove('visible');
+            setTimeout(() => {
+                titleScreen.classList.remove('hidden');
+                currentFocusIndex = -1;
+            }, 300);
+        }
+        
+        // Title screen interaction
+        pressStart.addEventListener('click', () => {
+            initAudio();
+            playStart();
+            goToMenu();
+        });
+        
+        // Track 2 opens Instagram link
+        const track2 = document.querySelector('.track[data-track="2"]');
+        track2.addEventListener('click', () => {
+            initAudio();
+            playConfirm();
+            window.open('https://www.instagram.com/p/CFM9W5LJwEp/', '_blank');
+        });
+        
+        // Global keyboard handler
+        document.addEventListener('keydown', (e) => {
+            // Title screen: Space/Enter to start
+            if (!titleScreen.classList.contains('hidden')) {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                    e.preventDefault();
+                    initAudio();
+                    playStart();
+                    goToMenu();
+                }
+                return;
+            }
+            
+            // Menu screen controls
+            if (menuScreen.classList.contains('visible')) {
+                initAudio();
+                
+                // Backspace to go back to title
+                if (e.code === 'Backspace') {
+                    e.preventDefault();
+                    playBack();
+                    goToTitle();
+                    return;
+                }
+                
+                // Arrow navigation
+                if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
+                    e.preventDefault();
+                    playBeep(400, 0.02);
+                    currentFocusIndex = (currentFocusIndex + 1) % focusableElements.length;
+                    focusableElements[currentFocusIndex]?.focus();
+                    return;
+                }
+                
+                if (e.code === 'ArrowUp' || e.code === 'ArrowLeft') {
+                    e.preventDefault();
+                    playBeep(400, 0.02);
+                    currentFocusIndex = (currentFocusIndex - 1 + focusableElements.length) % focusableElements.length;
+                    focusableElements[currentFocusIndex]?.focus();
+                    return;
+                }
+                
+                // Enter to select current focused element
+                if (e.code === 'Enter' || e.code === 'Space') {
+                    e.preventDefault();
+                    const focused = document.activeElement;
+                    
+                    if (focused.classList.contains('track') && focused.dataset.track === '2') {
+                        playConfirm();
+                        window.open('https://www.instagram.com/p/CFM9W5LJwEp/', '_blank');
+                    } else if (focused.classList.contains('palette')) {
+                        focused.click();
+                    } else if (focused.dataset.quality) {
+                        focused.click();
+                    } else if (focused.dataset.lang) {
+                        focused.click();
+                    } else if (focused.id === 'startGame') {
+                        focused.click();
+                    }
+                }
+            }
+        });
+        
+        // Color palette selection
+        document.querySelectorAll('.palette').forEach(palette => {
+            palette.addEventListener('click', () => {
+                initAudio();
+                playSelect();
+                document.querySelectorAll('.palette').forEach(p => p.classList.remove('selected'));
+                palette.classList.add('selected');
+                
+                const theme = palette.dataset.theme;
+                document.body.className = `theme-${theme}`;
+                if (document.querySelector('[data-quality="ngbc"].selected')) {
+                    document.body.classList.add('quality-ngbc');
+                }
+            });
+        });
+        
+        // Quality toggle
+        document.querySelectorAll('[data-quality]').forEach(option => {
+            option.addEventListener('click', () => {
+                initAudio();
+                playSelect();
+                document.querySelectorAll('[data-quality]').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                
+                if (option.dataset.quality === 'ngbc') {
+                    document.body.classList.add('quality-ngbc');
+                } else {
+                    document.body.classList.remove('quality-ngbc');
+                }
+            });
+        });
+        
+        // Language toggle
+        document.querySelectorAll('[data-lang]').forEach(option => {
+            option.addEventListener('click', () => {
+                initAudio();
+                playSelect();
+                document.querySelectorAll('[data-lang]').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+        
+        // Start game button
+        document.getElementById('startGame').addEventListener('click', () => {
+            initAudio();
+            playConfirm();
+            
+            // Flash effect
+            const content = document.querySelector('.menu-content');
+            content.style.background = '#fff';
+            setTimeout(() => {
+                content.style.background = '';
+            }, 100);
+            
+            console.log('Starting game with:', {
+                track: document.querySelector('.track.selected')?.dataset.track,
+                theme: document.querySelector('.palette.selected')?.dataset.theme,
+                quality: document.querySelector('[data-quality].selected')?.dataset.quality,
+                language: document.querySelector('[data-lang].selected')?.dataset.lang
+            });
+        });
+        
+        // Add hover sounds
+        document.querySelectorAll('.track:not(.disabled), .palette, .toggle-option, .start-btn-text').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                if (audioCtx) {
+                    playBeep(400, 0.02);
+                }
+            });
+        });
+        
+        // Update focus index when clicking elements
+        focusableElements.forEach((el, index) => {
+            el.addEventListener('focus', () => {
+                currentFocusIndex = index;
+            });
+        });
+    </script>
+</body>
+</html>

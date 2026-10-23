@@ -182,7 +182,7 @@
   .menu-content {
     position: absolute;
     top: 26px; bottom: 26px; left: 26px; right: 26px;
-    overflow-y: auto; scrollbar-width: none;
+    overflow: hidden;
     display: flex; flex-direction: column; align-items: center;
     gap: 12px; padding: 12px 10px;
   }
@@ -274,7 +274,9 @@
   }
 
 
-  .quality-section, .lang-section { width: 100%; text-align: center; }
+  .settings-row { width: 100%; display: flex; align-items: stretch; }
+  .quality-section, .lang-section { flex: 1; text-align: center; }
+  .divider-v { width: 1px; background: #2a1a1a; flex-shrink: 0; }
   .option-row { display: flex; gap: 24px; justify-content: center; margin-top: 8px; }
   .opt-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .opt-jp   { font-size: 5px; color: #555; letter-spacing: 1px; }
@@ -441,6 +443,7 @@
 
         <div class="divider"></div>
 
+        <div class="settings-row">
         <div class="quality-section">
           <div class="section-label">
             <span class="jp-label" id="quality-section-jp"></span>
@@ -458,7 +461,7 @@
           </div>
         </div>
 
-        <div class="divider"></div>
+        <div class="divider-v"></div>
 
         <div class="lang-section">
           <div class="section-label">
@@ -475,6 +478,7 @@
               <button class="option-btn" onclick="selectOption(this, 'language')" id="lang-opt2-en"></button>
             </div>
           </div>
+        </div>
         </div>
 
         <div class="divider"></div>

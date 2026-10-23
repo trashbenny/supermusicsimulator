@@ -40,6 +40,7 @@
     transform: translate(-50%, -50%);
     transition: outline-color 0.05s;
   }
+  @media (hover: none) { #cursor { display: none; } }
   #cursor.corrupt {
     outline-color: transparent;
     background: transparent;
@@ -57,6 +58,7 @@
     color: var(--white);
     font-family: 'Press Start 2P', monospace;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -509,7 +511,7 @@
 //  CONFIG
 // =============================================================
 
-// Scale game
+// Max scale — shrinks to fit screen
 const APP_SCALE = 1.25;
 
 const TITLE_SCREEN_IMAGE = '';
@@ -619,6 +621,7 @@ let masterVolume = 0.40;
 
 // Cursor
 let cursorX = 0, cursorY = 0;
+let appScale = APP_SCALE;
 
 // Video / ASCII
 let sampleCanvas, sampleCtx;
@@ -1062,8 +1065,8 @@ function renderHD() {
 
   // 2. Cursor in canvas space
   const appRect = document.getElementById('app').getBoundingClientRect();
-  const cx = (cursorX - appRect.left) / APP_SCALE;
-  const cy = (cursorY - appRect.top)  / APP_SCALE;
+  const cx = (cursorX - appRect.left) / appScale;
+  const cy = (cursorY - appRect.top)  / appScale;
   const inZone = cx >= 0 && cx <= 700 && cy >= 0 && cy <= 700;
 
   if (!inZone) {
@@ -1196,6 +1199,14 @@ function renderAscii() {
   playerAnimId = requestAnimationFrame(renderAscii);
 }
 
+// ===================== FIT TO SCREEN =====================
+function fitApp() {
+  const vw = window.visualViewport?.width  || window.innerWidth;
+  const vh = window.visualViewport?.height || window.innerHeight;
+  appScale = Math.min(APP_SCALE, vw / 700, vh / 700);
+  document.getElementById('app').style.transform = `scale(${appScale})`;
+}
+
 // ===================== INIT =====================
 (function init() {
   // Cursor
@@ -1210,7 +1221,8 @@ function renderAscii() {
     document.getElementById('cursor').classList.toggle('corrupt', isCorrupt);
   });
 
-  document.getElementById('app').style.transform = `scale(${APP_SCALE})`;
+  fitApp();
+  window.addEventListener('resize', fitApp);
 
   applyText();
   initWaveform();

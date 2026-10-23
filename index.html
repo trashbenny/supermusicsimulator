@@ -1,953 +1,1234 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SUPER MUSIC SIMULATOR EXPERIENCE</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Press Start 2P', monospace;
-            background: #000;
-            color: #e8e8e8;
-            min-height: 100vh;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .container {
-            width: min(100vw, 100vh);
-            height: min(100vw, 100vh);
-            max-width: 600px;
-            max-height: 600px;
-            position: relative;
-            background: #0a0a0a;
-        }
-        
-        /* Title Screen */
-        .title-screen {
-            position: absolute;
-            inset: 0;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
-        
-        .title-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-        
-        .badge {
-            position: relative;
-            width: 220px;
-            height: 220px;
-        }
-        
-        .badge-circle {
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: #6b3a3a;
-            border: 6px solid #d4d4d4;
-            image-rendering: pixelated;
-            box-shadow: 
-                inset 0 0 50px rgba(0,0,0,0.4),
-                0 0 30px rgba(107, 58, 58, 0.3);
-        }
-        
-        .badge-text-curved {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .badge-text-curved svg {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .badge-text-curved text {
-            font-family: 'Press Start 2P', monospace;
-            font-size: 12px;
-            fill: #e8e8e8;
-            letter-spacing: 4px;
-        }
-        
-        .badge-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-        
-        .badge-center h1 {
-            font-size: 15px;
-            line-height: 1.4;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-        }
-        
-        .kaomoji {
-            margin-top: 12px;
-            font-size: 10px;
-            opacity: 0.8;
-        }
-        
-        .press-start {
-            margin-top: 35px;
-            font-size: 10px;
-            animation: blink 1s step-end infinite;
-            cursor: pointer;
-        }
-        
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        
-        /* Menu Screen */
-        .menu-screen {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.5s, visibility 0.5s;
-        }
-        
-        .menu-screen.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        /* Marquee border frame */
-        .marquee-frame {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        
-        .marquee-track {
-            position: absolute;
-            background: #6b3a3a;
-            overflow: hidden;
-        }
-        
-        /* Outer layer - English */
-        .marquee-track.top.outer {
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 18px;
-        }
-        
-        .marquee-track.bottom.outer {
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 18px;
-        }
-        
-        .marquee-track.left.outer {
-            top: 18px;
-            bottom: 18px;
-            left: 0;
-            width: 18px;
-        }
-        
-        .marquee-track.right.outer {
-            top: 18px;
-            bottom: 18px;
-            right: 0;
-            width: 18px;
-        }
-        
-        /* Inner layer - Japanese */
-        .marquee-track.top.inner {
-            top: 18px;
-            left: 18px;
-            right: 18px;
-            height: 16px;
-        }
-        
-        .marquee-track.bottom.inner {
-            bottom: 18px;
-            left: 18px;
-            right: 18px;
-            height: 16px;
-        }
-        
-        .marquee-track.left.inner {
-            top: 34px;
-            bottom: 34px;
-            left: 18px;
-            width: 16px;
-        }
-        
-        .marquee-track.right.inner {
-            top: 34px;
-            bottom: 34px;
-            right: 18px;
-            width: 16px;
-        }
-        
-        .marquee-canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* Main content */
-        .menu-content {
-            position: absolute;
-            top: 34px;
-            left: 34px;
-            right: 34px;
-            bottom: 34px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 12px 8px;
-            background: #0a0a0a;
-            overflow: hidden;
-        }
-        
-        /* Scanlines overlay */
-        .menu-content::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0,0,0,0.1) 2px,
-                rgba(0,0,0,0.1) 4px
-            );
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 18px;
-        }
-        
-        .header-jp {
-            font-size: 5px;
-            color: #888;
-            margin-bottom: 5px;
-        }
-        
-        .header-katakana {
-            font-size: 22px;
-            background: #6b3a3a;
-            padding: 6px 16px;
-            margin-bottom: 6px;
-            letter-spacing: 4px;
-        }
-        
-        .header-en {
-            font-size: 14px;
-            letter-spacing: 3px;
-        }
-        
-        /* Sections */
-        .section {
-            margin-bottom: 14px;
-            text-align: center;
-            width: 100%;
-            max-width: 450px;
-        }
-        
-        .section-label {
-            font-size: 5px;
-            color: #666;
-            margin-bottom: 2px;
-        }
-        
-        .section-title {
-            font-size: 9px;
-            margin-bottom: 8px;
-            letter-spacing: 2px;
-        }
-        
-        /* Track list */
-        .track-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            text-align: left;
-            padding: 0 5px;
-        }
-        
-        .track {
-            font-size: 6px;
-            padding: 5px 8px;
-            cursor: pointer;
-            transition: all 0.1s;
-            border: 2px solid transparent;
-            pointer-events: auto;
-        }
-        
-        .track.disabled {
-            color: #444;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-        
-        .track:not(.disabled):hover {
-            background: rgba(107, 58, 58, 0.3);
-        }
-        
-        .track.selected {
-            border: 2px solid #e8e8e8;
-            background: rgba(107, 58, 58, 0.2);
-        }
-        
-        .track.focusable:focus {
-            outline: none;
-            background: rgba(107, 58, 58, 0.4);
-        }
-        
-        /* Color palette */
-        .palette-options {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-        }
-        
-        .palette {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            padding: 6px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.1s;
-            pointer-events: auto;
-        }
-        
-        .palette:hover {
-            background: rgba(255,255,255,0.05);
-        }
-        
-        .palette.selected {
-            border-color: #e8e8e8;
-        }
-        
-        .palette.selected::before {
-            content: '▶';
-            font-size: 6px;
-            margin-right: 4px;
-        }
-        
-        .palette:focus {
-            outline: none;
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .color-swatch {
-            width: 14px;
-            height: 14px;
-            image-rendering: pixelated;
-        }
-        
-        /* Toggle options */
-        .toggle-options {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-        }
-        
-        .toggle-option {
-            font-size: 8px;
-            padding: 5px 10px;
-            cursor: pointer;
-            opacity: 0.5;
-            transition: all 0.1s;
-            border: 2px solid transparent;
-            pointer-events: auto;
-        }
-        
-        .toggle-option:hover {
-            opacity: 0.8;
-        }
-        
-        .toggle-option.selected {
-            opacity: 1;
-            border-color: #e8e8e8;
-        }
-        
-        .toggle-option:focus {
-            outline: none;
-            opacity: 1;
-            background: rgba(255,255,255,0.1);
-        }
-        
-        /* Start button */
-        .start-btn {
-            margin-top: auto;
-            padding-bottom: 5px;
-        }
-        
-        .start-btn-label {
-            font-size: 5px;
-            color: #666;
-            margin-bottom: 2px;
-        }
-        
-        .start-btn-text {
-            font-size: 12px;
-            cursor: pointer;
-            padding: 8px 16px;
-            transition: all 0.1s;
-            letter-spacing: 3px;
-            pointer-events: auto;
-        }
-        
-        .start-btn-text:hover,
-        .start-btn-text:focus {
-            background: #6b3a3a;
-            transform: scale(1.05);
-            outline: none;
-        }
-        
-        /* Color themes */
-        .theme-red .marquee-track,
-        .theme-red .header-katakana,
-        .theme-red .start-btn-text:hover { background: #6b3a3a; }
-        .theme-red .marquee-text { color: #2a1515; }
-        
-        .theme-teal .marquee-track,
-        .theme-teal .header-katakana,
-        .theme-teal .start-btn-text:hover { background: #3a6b6b; }
-        .theme-teal .marquee-text { color: #152a2a; }
-        .theme-teal .track.selected,
-        .theme-teal .track:hover { background: rgba(58, 107, 107, 0.3); }
-        
-        .theme-purple .marquee-track,
-        .theme-purple .header-katakana,
-        .theme-purple .start-btn-text:hover { background: #5a3a6b; }
-        .theme-purple .marquee-text { color: #231529; }
-        .theme-purple .track.selected,
-        .theme-purple .track:hover { background: rgba(90, 58, 107, 0.3); }
-        
-        /* NGBC (low quality) mode */
-        .quality-ngbc {
-            image-rendering: pixelated;
-        }
-        
-        .quality-ngbc .menu-content {
-            filter: blur(0.5px);
-        }
-        
-        .quality-ngbc * {
-            font-smooth: never;
-            -webkit-font-smoothing: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Super Music Simulator Experience</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --red: #8B1A1A;
+    --red-bright: #c0392b;
+    --cream: #e8dcc8;
+    --white: #f0ece0;
+    --black: #0a0a0a;
+    --border-outer: #5a3a3a;
+    --border-inner: #3a2a2a;
+    --palette-red: #c0392b;
+    --palette-mono: #d0cfc8;
+    --palette-ice: #8ab4c8;
+    --strip-inner-bg: #8B1A1A;
+    --strip-outer-text: #6a2a2a;
+    --banner-bg: #8B1A1A;
+    --banner-text: #f0ece0;
+  }
+
+  * {
+    margin: 0; padding: 0; box-sizing: border-box; cursor: none !important;
+    /* no select / caret */
+    user-select: none; -webkit-user-select: none; caret-color: transparent;
+  }
+  button:focus, [tabindex]:focus { outline: none; }
+
+  /* ===================== CUSTOM CURSOR ===================== */
+  #cursor {
+    position: fixed; z-index: 10000; pointer-events: none;
+    width: 5px; height: 5px;
+    outline: 1.5px solid #fff;
+    background: rgba(255,255,255,0.15);
+    transform: translate(-50%, -50%);
+    transition: outline-color 0.05s;
+  }
+  #cursor.corrupt {
+    outline-color: transparent;
+    background: transparent;
+  }
+  #cursor.corrupt::before, #cursor.corrupt::after {
+    content: ''; position: absolute;
+    width: 140%; height: 2px; background: #fff;
+    top: 50%; left: -20%;
+  }
+  #cursor.corrupt::before { transform: translateY(-50%) rotate(45deg); }
+  #cursor.corrupt::after  { transform: translateY(-50%) rotate(-45deg); }
+
+  body {
+    background: #050505;
+    color: var(--white);
+    font-family: 'Press Start 2P', monospace;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.3;
+  }
+
+  /* ===================== APP CONTAINER ===================== */
+  #app {
+    width: 700px;
+    height: 700px;
+    position: relative;
+    background: var(--black);
+    flex-shrink: 0;
+  }
+
+  .screen { position: absolute; inset: 0; display: none; }
+  .screen.active { display: flex; }
+
+  /* ===================== SCREEN A: TITLE ===================== */
+  #screen-title.active {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .title-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: 0.35; display: none;
+  }
+
+  #title-video {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: center; display: none; pointer-events: none;
+  }
+
+  #title-start-prompt {
+    position: absolute; bottom: 60px; left: 0; right: 0;
+    text-align: center; font-size: 10px; color: var(--white);
+    letter-spacing: 6px; pointer-events: none; z-index: 2;
+    animation: blink 1.2s step-end infinite;
+  }
+
+  .badge-circle {
+    width: 300px; height: 300px; border-radius: 50%;
+    background: var(--red); border: 6px solid var(--cream);
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 10px var(--black), 0 0 0 15px var(--cream), 0 0 50px rgba(139,26,26,0.6);
+    animation: badgePulse 3s ease-in-out infinite;
+  }
+
+  @keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 0 10px var(--black), 0 0 0 15px var(--cream), 0 0 30px rgba(139,26,26,0.4); }
+    50%       { box-shadow: 0 0 0 10px var(--black), 0 0 0 15px var(--cream), 0 0 70px rgba(139,26,26,0.8); }
+  }
+
+  .badge-arc-text { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
+  .badge-center { text-align: center; z-index: 1; }
+  .badge-simulator  { font-size: 14px; color: var(--cream); letter-spacing: 2px; line-height: 2; text-shadow: 2px 2px 0 rgba(0,0,0,0.5); }
+  .badge-experience { font-size: 12px; color: var(--cream); letter-spacing: 1px; line-height: 2; text-shadow: 2px 2px 0 rgba(0,0,0,0.5); }
+
+  .press-start {
+    margin-top: 60px; font-size: 10px; color: var(--cream); letter-spacing: 4px;
+    animation: blink 1.2s step-end infinite; position: relative; z-index: 1;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* ===================== SCREEN B: MENU ===================== */
+  #screen-menu.active { flex-direction: column; }
+
+  .menu-frame { position: relative; width: 100%; height: 100%; border: 2px solid var(--border-outer); }
+
+  .sb { position: absolute; overflow: hidden; white-space: nowrap; }
+
+  /* Outer English strips */
+  .sb-en { font-size: 6px; color: var(--strip-outer-text); letter-spacing: 1px; }
+  .sb-en-t { top: 0;    left: 0;  right: 0;  height: 13px; display: flex; align-items: center; }
+  .sb-en-b { bottom: 0; left: 0;  right: 0;  height: 13px; display: flex; align-items: center; }
+  .sb-en-l { left: 0;   top: 13px; bottom: 13px; width: 13px; writing-mode: vertical-rl; display: flex; align-items: center; }
+  .sb-en-r { right: 0;  top: 13px; bottom: 13px; width: 13px; writing-mode: vertical-rl; display: flex; align-items: center; }
+
+  /* Inner border line */
+  .inner-line { position: absolute; inset: 13px; border: 1px solid var(--border-inner); pointer-events: none; }
+
+  /* Inner Japanese strips */
+  .sb-jp { font-size: 6px; color: var(--black); background: var(--strip-inner-bg); letter-spacing: 1px; }
+  .sb-jp-t { top: 14px;    left: 14px;  right: 14px;  height: 12px; display: flex; align-items: center; }
+  .sb-jp-b { bottom: 14px; left: 14px;  right: 14px;  height: 12px; display: flex; align-items: center; }
+  .sb-jp-l { left: 14px;   top: 26px; bottom: 26px; width: 12px; writing-mode: vertical-rl; display: flex; align-items: center; }
+  .sb-jp-r { right: 14px;  top: 26px; bottom: 26px; width: 12px; writing-mode: vertical-rl; display: flex; align-items: center; }
+
+  .st  { animation: scrollH 28s linear infinite; display: inline-block; }
+  .stv { animation: scrollV 28s linear infinite; display: inline-block; }
+  @keyframes scrollH { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes scrollV { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+
+  /* Content */
+  .menu-content {
+    position: absolute;
+    top: 26px; bottom: 26px; left: 26px; right: 26px;
+    overflow-y: auto; scrollbar-width: none;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 12px; padding: 12px 10px;
+  }
+  .menu-content::-webkit-scrollbar { display: none; }
+
+  .menu-title-block { text-align: center; width: 100%; }
+  .jp-subtitle { font-size: 6px; color: #aaa; letter-spacing: 2px; margin-bottom: 5px; }
+  .dog-blood-banner { background: var(--banner-bg); padding: 8px 18px; display: inline-block; margin-bottom: 4px; }
+  .dog-blood-jp { font-size: 18px; color: var(--banner-text); letter-spacing: 4px; }
+  .dog-blood-en { font-size: 11px; color: var(--white); letter-spacing: 8px; margin-top: 4px; }
+
+  .section-label { font-size: 6px; color: #888; letter-spacing: 3px; text-align: center; margin-bottom: 7px; }
+  .jp-label { font-size: 5px; color: #555; letter-spacing: 2px; display: block; margin-bottom: 3px; }
+
+  .track-select { width: 100%; }
+  .track-title  { font-size: 7px; color: var(--cream); letter-spacing: 3px; text-align: center; margin-bottom: 10px; }
+  .tracks-grid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; justify-items: stretch; }
+
+  /* Track item */
+  .track-item {
+    font-size: 6px; color: #aaa; padding: 6px 8px; cursor: pointer;
+    border: 1px solid transparent; line-height: 1.7; transition: color 0.1s;
+    text-align: center;
+  }
+  .track-item:hover   { color: var(--white); }
+  .track-item.selected { background: var(--red); color: var(--white); }
+  .track-item.focused  { border-color: var(--cream); }
+  .track-jp { font-size: 5px; color: #666; display: block; margin-bottom: 2px; }
+  .track-item.selected .track-jp { color: #ddd; }
+
+  /* Corrupted track */
+  .track-item.corrupted {
+    color: #333;
+    cursor: not-allowed;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .track-item.corrupted .track-jp { color: #2a2a2a; }
+  .track-item.corrupted:hover {
+    animation: glitchCompress 0.12s steps(1) infinite;
+    color: #555;
+    background: rgba(139,26,26,0.07);
+  }
+  @keyframes glitchCompress {
+    0%   { transform: scaleY(1)    skewX(0deg)   translateX(0);    filter: none; }
+    15%  { transform: scaleY(0.1)  skewX(-7deg)  translateX(-4px); filter: brightness(3) hue-rotate(90deg); }
+    30%  { transform: scaleY(1.2)  skewX(4deg)   translateX(3px);  filter: brightness(0.4); }
+    50%  { transform: scaleY(0.04) skewX(12deg)  translateX(-2px); filter: brightness(5) saturate(0); }
+    65%  { transform: scaleY(0.75) skewX(-4deg)  translateX(6px);  filter: hue-rotate(-60deg); }
+    80%  { transform: scaleY(0.2)  skewX(6deg)   translateX(-1px); filter: brightness(2); }
+    100% { transform: scaleY(1)    skewX(0deg)   translateX(0);    filter: none; }
+  }
+
+  .palette-section { width: 100%; text-align: center; }
+  .palette-swatches { display: flex; gap: 16px; justify-content: center; margin-top: 8px; align-items: flex-end; }
+  .swatch-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+  .swatch-lbl  { font-size: 5px; color: #555; letter-spacing: 1px; }
+
+  .swatch {
+    width: 26px; height: 16px; position: relative;
+    border: 2px solid transparent; transition: border-color 0.1s;
+  }
+  .swatch::before {
+    content: '▶'; position: absolute; left: -12px; top: 50%;
+    transform: translateY(-50%); font-size: 7px; color: var(--white); display: none;
+  }
+  .swatch.selected::before { display: block; }
+  .swatch.selected { border-color: var(--white); }
+  .swatch-red    { background: var(--palette-red); }
+  .swatch-mono   { background: var(--palette-mono); }
+  .swatch-ice    { background: var(--palette-ice); }
+  .swatch-wrap.focused .swatch { border-color: var(--cream); }
+
+  /* Volume */
+  .volume-section { width: 100%; text-align: center; }
+  .vol-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+  .vol-icon { font-size: 8px; color: #555; }
+  #vol-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 160px; height: 3px; background: #2a1a1a; outline: none; cursor: pointer;
+  }
+  #vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 10px; height: 10px; background: var(--red-bright); cursor: pointer;
+  }
+  #vol-slider::-moz-range-thumb {
+    width: 10px; height: 10px; background: var(--red-bright); cursor: pointer; border: none;
+  }
+
+
+  .quality-section, .lang-section { width: 100%; text-align: center; }
+  .option-row { display: flex; gap: 24px; justify-content: center; margin-top: 8px; }
+  .opt-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .opt-jp   { font-size: 5px; color: #555; letter-spacing: 1px; }
+
+  .option-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 7px; color: #777; cursor: pointer;
+    padding: 5px 10px; border: 1px solid transparent; background: none;
+    transition: color 0.1s; letter-spacing: 2px;
+  }
+  .option-btn:hover    { color: var(--white); }
+  .option-btn.selected { color: var(--white); border-color: #555; }
+  .option-btn.focused  { color: var(--white); border-color: var(--cream); }
+
+  /* Song parts */
+  .part-section { width: 100%; text-align: center; }
+  .part-btn.locked       { color: #2e2e2e; cursor: not-allowed; }
+  .part-btn.locked:hover { color: #2e2e2e; }
+  .opt-wrap.locked .opt-jp { color: #2a2a2a; }
+  #waveform { display: block; margin: 12px auto 0; image-rendering: pixelated; }
+
+  .start-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .start-jp   { font-size: 6px; color: #555; letter-spacing: 2px; }
+  .start-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 13px; color: var(--white);
+    background: none; border: 1px solid transparent; cursor: pointer; letter-spacing: 6px;
+    padding: 10px 28px; animation: startPulse 2s ease-in-out infinite;
+  }
+  .start-btn:hover   { color: var(--red-bright); }
+  .start-btn.focused { color: var(--red-bright); border-color: var(--cream); animation: none; }
+  @keyframes startPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+  .divider { width: 100%; height: 1px; background: #2a1a1a; flex-shrink: 0; }
+
+  /* ===================== SCREEN C: PLAYER ===================== */
+  /* unused — canvas renders both modes */
+  #ascii-display { display: none !important; }
+
+  #hd-canvas {
+    position: absolute; inset: 0;
+    width: 700px; height: 700px;
+    display: none;
+    filter: var(--palette-filter, none);
+  }
+
+  #player-info {
+    position: absolute; bottom: 56px;
+    left: 0; right: 0; text-align: center;
+    z-index: 10; pointer-events: none;
+  }
+
+  .player-track-name {
+    font-size: 9px; color: var(--cream); letter-spacing: 4px; text-align: center;
+    text-shadow: 0 0 40px rgba(0,0,0,1), 0 0 15px rgba(0,0,0,0.9);
+  }
+  .player-artist {
+    font-size: 6px; color: #888; letter-spacing: 3px; text-align: center; margin-top: 5px;
+    text-shadow: 0 0 30px rgba(0,0,0,1);
+  }
+
+  .back-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 6px; color: #555;
+    background: none; border: none; cursor: pointer; letter-spacing: 2px;
+    position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 10;
+  }
+  .back-btn:hover { color: var(--white); }
+
+  .exit-btn {
+    font-family: 'Press Start 2P', monospace; font-size: 6px; color: #3a2a2a;
+    background: none; border: none; cursor: pointer; letter-spacing: 2px;
+    display: block; margin: 4px auto 0;
+  }
+  .exit-btn:hover { color: #888; }
+</style>
 </head>
-<body class="theme-red">
-    <div class="container">
-        <!-- Title Screen -->
-        <div class="title-screen" id="titleScreen">
-            <div class="badge">
-                <div class="badge-circle"></div>
-                <div class="badge-text-curved">
-                    <svg viewBox="0 0 220 220">
-                        <defs>
-                            <path id="curve" d="M 25,110 A 85,85 0 0,1 195,110" fill="transparent"/>
-                        </defs>
-                        <text>
-                            <textPath href="#curve" startOffset="50%" text-anchor="middle">
-                                SUPER MUSIC
-                            </textPath>
-                        </text>
-                    </svg>
-                </div>
-                <div class="badge-center">
-                    <h1>SIMULATOR<br>EXPERIENCE</h1>
-                    <div class="kaomoji">╲( *・ω・ )╱</div>
-                </div>
-            </div>
-            <div class="press-start" id="pressStart">PRESS START</div>
+<body>
+
+<div id="app">
+
+  <!-- SCREEN A: TITLE -->
+  <div id="screen-title" class="screen active" onclick="titleClick()">
+    <video id="title-video" loop playsinline muted crossorigin="anonymous"></video>
+    <div id="title-start-prompt">START GAME</div>
+  </div>
+
+  <!-- SCREEN B: MENU -->
+  <div id="screen-menu" class="screen">
+    <div class="menu-frame">
+
+      <!-- Outer strips -->
+      <div class="sb sb-en sb-en-t"><span id="sb-en-t" class="st" style="animation-direction:reverse"></span></div>
+      <div class="sb sb-en sb-en-b"><span id="sb-en-b" class="st"></span></div>
+      <div class="sb sb-en sb-en-l"><span id="sb-en-l" class="stv"></span></div>
+      <div class="sb sb-en sb-en-r"><span id="sb-en-r" class="stv" style="animation-direction:reverse"></span></div>
+
+      <!-- Inner border line -->
+      <div class="inner-line"></div>
+
+      <!-- Inner strips -->
+      <div class="sb sb-jp sb-jp-t"><span id="sb-jp-t" class="st" style="animation-direction:reverse;animation-duration:40s"></span></div>
+      <div class="sb sb-jp sb-jp-b"><span id="sb-jp-b" class="st" style="animation-duration:40s"></span></div>
+      <div class="sb sb-jp sb-jp-l"><span id="sb-jp-l" class="stv" style="animation-duration:40s"></span></div>
+      <div class="sb sb-jp sb-jp-r"><span id="sb-jp-r" class="stv" style="animation-direction:reverse;animation-duration:40s"></span></div>
+
+      <!-- Content -->
+      <div class="menu-content">
+
+        <div class="menu-title-block">
+          <div class="jp-subtitle" id="menu-subtitle-jp"></div>
+          <div class="dog-blood-banner">
+            <div class="dog-blood-jp" id="menu-artist-jp"></div>
+          </div>
+          <div class="dog-blood-en" id="menu-artist-en"></div>
         </div>
-        
-        <!-- Menu Screen -->
-        <div class="menu-screen" id="menuScreen">
-            <!-- Marquee border - Outer layer (English) -->
-            <div class="marquee-frame">
-                <div class="marquee-track top outer"><canvas class="marquee-canvas"></canvas></div>
-                <div class="marquee-track bottom outer"><canvas class="marquee-canvas"></canvas></div>
-                <div class="marquee-track left outer"><canvas class="marquee-canvas"></canvas></div>
-                <div class="marquee-track right outer"><canvas class="marquee-canvas"></canvas></div>
-                
-                <!-- Inner layer (Japanese) -->
-                <div class="marquee-track top inner"><canvas class="marquee-canvas"></canvas></div>
-                <div class="marquee-track bottom inner"><canvas class="marquee-canvas"></canvas></div>
-                <div class="marquee-track left inner"><canvas class="marquee-canvas"></canvas></div>
-                <div class="marquee-track right inner"><canvas class="marquee-canvas"></canvas></div>
-            </div>
-            
-            <div class="menu-content">
-                <div class="header">
-                    <div class="header-jp">「消灯する」</div>
-                    <div class="header-katakana">ドッグブラッド</div>
-                    <div class="header-en">DOG BLOOD</div>
-                </div>
-                
-                <div class="section">
-                    <div class="section-label">トラックを選択</div>
-                    <div class="section-title">SELECT TRACK</div>
-                    <div class="track-list">
-                        <div class="track disabled" data-track="1">1. BREAK LAW</div>
-                        <div class="track disabled" data-track="3">3. KOKOE (with Otira)</div>
-                        <div class="track selected" data-track="2" tabindex="0">2. 4 MIND (with josh pan and X&G)</div>
-                        <div class="track disabled" data-track="4">4. TURN OFF THE LIGHTS</div>
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <div class="section-label">カラーパレット</div>
-                    <div class="section-title">COLOUR PALETTE</div>
-                    <div class="palette-options">
-                        <div class="palette selected" data-theme="red" tabindex="0">
-                            <div class="color-swatch" style="background: #6b3a3a;"></div>
-                            <div class="color-swatch" style="background: #2a1515;"></div>
-                        </div>
-                        <div class="palette" data-theme="teal" tabindex="0">
-                            <div class="color-swatch" style="background: #3a6b6b;"></div>
-                            <div class="color-swatch" style="background: #152a2a;"></div>
-                        </div>
-                        <div class="palette" data-theme="purple" tabindex="0">
-                            <div class="color-swatch" style="background: #5a3a6b;"></div>
-                            <div class="color-swatch" style="background: #231529;"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <div class="section-label">トラックを選択</div>
-                    <div class="section-title">QUALITY</div>
-                    <div class="toggle-options">
-                        <div class="toggle-option" data-quality="ngbc" tabindex="0">NGBC</div>
-                        <div class="toggle-option selected" data-quality="hd" tabindex="0">HD</div>
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <div class="section-label">言語</div>
-                    <div class="section-title">LANGUAGE</div>
-                    <div class="toggle-options">
-                        <div class="toggle-option selected" data-lang="en" tabindex="0">EN</div>
-                        <div class="toggle-option" data-lang="jp" tabindex="0">JP</div>
-                    </div>
-                </div>
-                
-                <div class="start-btn">
-                    <div class="start-btn-label">行こう</div>
-                    <div class="start-btn-text" id="startGame" tabindex="0">START</div>
-                </div>
-            </div>
+
+        <div class="divider"></div>
+
+        <div class="track-select" style="width:100%">
+          <div class="track-title">
+            <span class="jp-label" id="track-section-jp"></span>
+            <span id="track-section-en"></span>
+          </div>
+          <div class="tracks-grid" id="tracks-grid"></div>
         </div>
+
+        <div class="divider"></div>
+
+        <div class="part-section">
+          <div class="section-label">
+            <span class="jp-label" id="part-section-jp"></span>
+            <span id="part-section-en"></span>
+          </div>
+          <div class="option-row" id="parts-row"></div>
+          <canvas id="waveform"></canvas>
+          <div class="vol-row" style="margin-top:12px">
+            <span class="vol-icon">♪</span>
+            <input type="range" id="vol-slider" min="0" max="100" value="40" oninput="setVolume(this.value)">
+            <span class="vol-icon">♫</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="palette-section">
+          <div class="section-label">
+            <span class="jp-label" id="palette-section-jp"></span>
+            <span id="palette-section-en"></span>
+          </div>
+          <div class="palette-swatches">
+            <div class="swatch-wrap" onclick="selectPalette('red', this)">
+              <span class="swatch-lbl" id="swatch-lbl-red"></span>
+              <div class="swatch swatch-red selected"></div>
+            </div>
+            <div class="swatch-wrap" onclick="selectPalette('mono', this)">
+              <span class="swatch-lbl" id="swatch-lbl-mono"></span>
+              <div class="swatch swatch-mono"></div>
+            </div>
+            <div class="swatch-wrap" onclick="selectPalette('ice', this)">
+              <span class="swatch-lbl" id="swatch-lbl-ice"></span>
+              <div class="swatch swatch-ice"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="quality-section">
+          <div class="section-label">
+            <span class="jp-label" id="quality-section-jp"></span>
+            <span id="quality-section-en"></span>
+          </div>
+          <div class="option-row">
+            <div class="opt-wrap">
+              <span class="opt-jp" id="quality-opt1-jp"></span>
+              <button class="option-btn selected" onclick="selectOption(this, 'quality')" id="quality-opt1-en"></button>
+            </div>
+            <div class="opt-wrap">
+              <span class="opt-jp" id="quality-opt2-jp"></span>
+              <button class="option-btn" onclick="selectOption(this, 'quality')" id="quality-opt2-en"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="lang-section">
+          <div class="section-label">
+            <span class="jp-label" id="lang-section-jp"></span>
+            <span id="lang-section-en"></span>
+          </div>
+          <div class="option-row">
+            <div class="opt-wrap">
+              <span class="opt-jp" id="lang-opt1-jp"></span>
+              <button class="option-btn selected" onclick="selectOption(this, 'language')" id="lang-opt1-en"></button>
+            </div>
+            <div class="opt-wrap">
+              <span class="opt-jp" id="lang-opt2-jp"></span>
+              <button class="option-btn" onclick="selectOption(this, 'language')" id="lang-opt2-en"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="start-wrap">
+          <span class="start-jp" id="start-jp"></span>
+          <button class="start-btn" onclick="goToPlayer()" id="start-en"></button>
+          <button class="exit-btn" onclick="goToTitle()">← EXIT</button>
+        </div>
+
+      </div>
     </div>
-    
-    <script>
-        // ============ MARQUEE SYSTEM ============
-        const MARQUEE_TEXT_EN = 'SUPER MUSIC SIMULATOR EXPERIENCE · ';
-        const MARQUEE_TEXT_JP = 'スーパーミュージックシミュレーター体験 · ';
-        
-        const marquees = [];
-        
-        class Marquee {
-            constructor(canvas, text, speed, isVertical, fontSize, color) {
-                this.canvas = canvas;
-                this.ctx = canvas.getContext('2d');
-                this.text = text;
-                this.speed = speed;
-                this.isVertical = isVertical;
-                this.fontSize = fontSize;
-                this.color = color;
-                this.offset = 0;
-                this.textWidth = 0;
-                this.resize();
-            }
-            
-            resize() {
-                const rect = this.canvas.parentElement.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
-                
-                this.canvas.width = rect.width * dpr;
-                this.canvas.height = rect.height * dpr;
-                this.canvas.style.width = rect.width + 'px';
-                this.canvas.style.height = rect.height + 'px';
-                
-                this.ctx.scale(dpr, dpr);
-                this.ctx.font = `${this.fontSize}px "Press Start 2P", monospace`;
-                this.ctx.fillStyle = this.color;
-                this.ctx.textBaseline = 'middle';
-                
-                this.textWidth = this.ctx.measureText(this.text).width;
-                this.width = rect.width;
-                this.height = rect.height;
-            }
-            
-            update(dt) {
-                this.offset += this.speed * dt;
-                
-                // Wrap offset seamlessly
-                if (this.isVertical) {
-                    if (Math.abs(this.offset) >= this.textWidth) {
-                        this.offset = this.offset % this.textWidth;
-                    }
-                } else {
-                    if (Math.abs(this.offset) >= this.textWidth) {
-                        this.offset = this.offset % this.textWidth;
-                    }
-                }
-            }
-            
-            draw() {
-                const dpr = window.devicePixelRatio || 1;
-                this.ctx.clearRect(0, 0, this.canvas.width / dpr, this.canvas.height / dpr);
-                
-                if (this.isVertical) {
-                    this.ctx.save();
-                    this.ctx.translate(this.width / 2 + this.fontSize / 3, 0);
-                    this.ctx.rotate(Math.PI / 2);
-                    
-                    let x = this.offset;
-                    // Draw enough copies to fill the height
-                    const copies = Math.ceil(this.height / this.textWidth) + 2;
-                    for (let i = -1; i < copies; i++) {
-                        this.ctx.fillText(this.text, x + i * this.textWidth, 0);
-                    }
-                    
-                    this.ctx.restore();
-                } else {
-                    let x = this.offset;
-                    // Draw enough copies to fill the width
-                    const copies = Math.ceil(this.width / this.textWidth) + 2;
-                    for (let i = -1; i < copies; i++) {
-                        this.ctx.fillText(this.text, x + i * this.textWidth, this.height / 2);
-                    }
-                }
-            }
-        }
-        
-        function initMarquees() {
-            const tracks = document.querySelectorAll('.marquee-track');
-            const textColor = getComputedStyle(document.body).getPropertyValue('--marquee-color') || '#2a1515';
-            
-            tracks.forEach(track => {
-                const canvas = track.querySelector('.marquee-canvas');
-                const isOuter = track.classList.contains('outer');
-                const isVertical = track.classList.contains('left') || track.classList.contains('right');
-                const isTop = track.classList.contains('top');
-                const isLeft = track.classList.contains('left');
-                
-                const text = isOuter ? MARQUEE_TEXT_EN : MARQUEE_TEXT_JP;
-                const fontSize = isOuter ? 6 : 5;
-                
-                // Determine direction (clockwise for outer, counter-clockwise for inner)
-                let speed;
-                if (isOuter) {
-                    // Clockwise: top goes left(-), right goes down(+), bottom goes right(+), left goes up(-)
-                    if (isTop) speed = -30;
-                    else if (track.classList.contains('bottom')) speed = 30;
-                    else if (isLeft) speed = -30;
-                    else speed = 30; // right
-                } else {
-                    // Counter-clockwise: opposite
-                    if (isTop) speed = 25;
-                    else if (track.classList.contains('bottom')) speed = -25;
-                    else if (isLeft) speed = 25;
-                    else speed = -25; // right
-                }
-                
-                const marquee = new Marquee(canvas, text, speed, isVertical, fontSize, '#2a1515');
-                marquees.push(marquee);
-            });
-        }
-        
-        let lastTime = 0;
-        function animateMarquees(time) {
-            const dt = (time - lastTime) / 1000;
-            lastTime = time;
-            
-            marquees.forEach(m => {
-                m.update(dt);
-                m.draw();
-            });
-            
-            requestAnimationFrame(animateMarquees);
-        }
-        
-        // Initialize after fonts load
-        document.fonts.ready.then(() => {
-            initMarquees();
-            requestAnimationFrame(animateMarquees);
-        });
-        
-        // Handle resize
-        window.addEventListener('resize', () => {
-            marquees.forEach(m => m.resize());
-        });
-        
-        // ============ AUDIO SYSTEM ============
-        // Audio context for UI sounds
-        let audioCtx = null;
-        
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-        }
-        
-        function playBeep(freq = 800, duration = 0.05, type = 'square') {
-            if (!audioCtx) return;
-            
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-        
-        function playSelect() {
-            playBeep(600, 0.08);
-        }
-        
-        function playConfirm() {
-            playBeep(800, 0.05);
-            setTimeout(() => playBeep(1000, 0.08), 60);
-        }
-        
-        function playStart() {
-            playBeep(400, 0.1);
-            setTimeout(() => playBeep(600, 0.1), 100);
-            setTimeout(() => playBeep(800, 0.15), 200);
-        }
-        
-        function playBack() {
-            playBeep(300, 0.1);
-        }
-        
-        // Elements
-        const titleScreen = document.getElementById('titleScreen');
-        const menuScreen = document.getElementById('menuScreen');
-        const pressStart = document.getElementById('pressStart');
-        
-        // All focusable elements in order
-        const focusableElements = [
-            document.querySelector('.track[data-track="2"]'),
-            ...document.querySelectorAll('.palette'),
-            ...document.querySelectorAll('[data-quality]'),
-            ...document.querySelectorAll('[data-lang]'),
-            document.getElementById('startGame')
-        ];
-        
-        let currentFocusIndex = -1;
-        
-        function goToMenu() {
-            titleScreen.classList.add('hidden');
-            setTimeout(() => {
-                menuScreen.classList.add('visible');
-                currentFocusIndex = 0;
-                focusableElements[0]?.focus();
-            }, 300);
-        }
-        
-        function goToTitle() {
-            menuScreen.classList.remove('visible');
-            setTimeout(() => {
-                titleScreen.classList.remove('hidden');
-                currentFocusIndex = -1;
-            }, 300);
-        }
-        
-        // Title screen interaction
-        pressStart.addEventListener('click', () => {
-            initAudio();
-            playStart();
-            goToMenu();
-        });
-        
-        // Track 2 opens Instagram link
-        const track2 = document.querySelector('.track[data-track="2"]');
-        track2.addEventListener('click', () => {
-            initAudio();
-            playConfirm();
-            window.open('https://www.instagram.com/p/CFM9W5LJwEp/', '_blank');
-        });
-        
-        // Global keyboard handler
-        document.addEventListener('keydown', (e) => {
-            // Title screen: Space/Enter to start
-            if (!titleScreen.classList.contains('hidden')) {
-                if (e.code === 'Space' || e.code === 'Enter') {
-                    e.preventDefault();
-                    initAudio();
-                    playStart();
-                    goToMenu();
-                }
-                return;
-            }
-            
-            // Menu screen controls
-            if (menuScreen.classList.contains('visible')) {
-                initAudio();
-                
-                // Backspace to go back to title
-                if (e.code === 'Backspace') {
-                    e.preventDefault();
-                    playBack();
-                    goToTitle();
-                    return;
-                }
-                
-                // Arrow navigation
-                if (e.code === 'ArrowDown' || e.code === 'ArrowRight') {
-                    e.preventDefault();
-                    playBeep(400, 0.02);
-                    currentFocusIndex = (currentFocusIndex + 1) % focusableElements.length;
-                    focusableElements[currentFocusIndex]?.focus();
-                    return;
-                }
-                
-                if (e.code === 'ArrowUp' || e.code === 'ArrowLeft') {
-                    e.preventDefault();
-                    playBeep(400, 0.02);
-                    currentFocusIndex = (currentFocusIndex - 1 + focusableElements.length) % focusableElements.length;
-                    focusableElements[currentFocusIndex]?.focus();
-                    return;
-                }
-                
-                // Enter to select current focused element
-                if (e.code === 'Enter' || e.code === 'Space') {
-                    e.preventDefault();
-                    const focused = document.activeElement;
-                    
-                    if (focused.classList.contains('track') && focused.dataset.track === '2') {
-                        playConfirm();
-                        window.open('https://www.instagram.com/p/CFM9W5LJwEp/', '_blank');
-                    } else if (focused.classList.contains('palette')) {
-                        focused.click();
-                    } else if (focused.dataset.quality) {
-                        focused.click();
-                    } else if (focused.dataset.lang) {
-                        focused.click();
-                    } else if (focused.id === 'startGame') {
-                        focused.click();
-                    }
-                }
-            }
-        });
-        
-        // Color palette selection
-        document.querySelectorAll('.palette').forEach(palette => {
-            palette.addEventListener('click', () => {
-                initAudio();
-                playSelect();
-                document.querySelectorAll('.palette').forEach(p => p.classList.remove('selected'));
-                palette.classList.add('selected');
-                
-                const theme = palette.dataset.theme;
-                document.body.className = `theme-${theme}`;
-                if (document.querySelector('[data-quality="ngbc"].selected')) {
-                    document.body.classList.add('quality-ngbc');
-                }
-            });
-        });
-        
-        // Quality toggle
-        document.querySelectorAll('[data-quality]').forEach(option => {
-            option.addEventListener('click', () => {
-                initAudio();
-                playSelect();
-                document.querySelectorAll('[data-quality]').forEach(o => o.classList.remove('selected'));
-                option.classList.add('selected');
-                
-                if (option.dataset.quality === 'ngbc') {
-                    document.body.classList.add('quality-ngbc');
-                } else {
-                    document.body.classList.remove('quality-ngbc');
-                }
-            });
-        });
-        
-        // Language toggle
-        document.querySelectorAll('[data-lang]').forEach(option => {
-            option.addEventListener('click', () => {
-                initAudio();
-                playSelect();
-                document.querySelectorAll('[data-lang]').forEach(o => o.classList.remove('selected'));
-                option.classList.add('selected');
-            });
-        });
-        
-        // Start game button
-        document.getElementById('startGame').addEventListener('click', () => {
-            initAudio();
-            playConfirm();
-            
-            // Flash effect
-            const content = document.querySelector('.menu-content');
-            content.style.background = '#fff';
-            setTimeout(() => {
-                content.style.background = '';
-            }, 100);
-            
-            console.log('Starting game with:', {
-                track: document.querySelector('.track.selected')?.dataset.track,
-                theme: document.querySelector('.palette.selected')?.dataset.theme,
-                quality: document.querySelector('[data-quality].selected')?.dataset.quality,
-                language: document.querySelector('[data-lang].selected')?.dataset.lang
-            });
-        });
-        
-        // Add hover sounds
-        document.querySelectorAll('.track:not(.disabled), .palette, .toggle-option, .start-btn-text').forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                if (audioCtx) {
-                    playBeep(400, 0.02);
-                }
-            });
-        });
-        
-        // Update focus index when clicking elements
-        focusableElements.forEach((el, index) => {
-            el.addEventListener('focus', () => {
-                currentFocusIndex = index;
-            });
-        });
-    </script>
+  </div>
+
+  <!-- video source -->
+  <video id="bg-video" loop playsinline muted crossorigin="anonymous" style="display:none"></video>
+
+  <!-- SCREEN C: PLAYER -->
+  <div id="screen-player" class="screen">
+    <pre id="ascii-display"></pre>
+    <canvas id="hd-canvas" width="700" height="700"></canvas>
+    <div id="player-info">
+      <div class="player-track-name" id="playerTrackName"></div>
+      <div class="player-artist"     id="playerArtist"></div>
+    </div>
+    <button class="back-btn" id="back-btn" onclick="playSound('back'); goToMenu()"></button>
+  </div>
+
+</div>
+<div id="cursor"></div>
+
+<script>
+// =============================================================
+//  CONFIG
+// =============================================================
+
+// Scale game
+const APP_SCALE = 1.25;
+
+const TITLE_SCREEN_IMAGE = '';
+
+// Title video
+const TITLE_VIDEO_URL = 'https://res.cloudinary.com/killbenny/video/upload/v1775061457/gameloop.mp4';
+
+// Player video
+const VIDEO_URL = 'https://res.cloudinary.com/killbenny/video/upload/v1774896516/Crazy_Manet_Test9.mp4';
+
+const TEXT = {
+  pageTitle:   'super music simulator experience!!',
+
+  arcTop:      '//title',
+  arcBottom:   '\\(*·ω·)/ ',
+  badgeLine1:  '//artist',
+  badgeLine2:  '2021',
+  pressStart:  'PRESS START',
+
+  scrollEn:    '//artist — //project',
+  scrollJp:    '//アーティスト — //プロジェクト',
+
+  subtitleJp:  '「//プロジェクト」',
+  artistJp:    '//アーティスト',
+  artistEn:    '//ARTIST - //PROJECT',
+
+  trackSectionJp: 'トラックを選択',
+  trackSectionEn: 'SELECT TRACK',
+
+  partSectionJp: 'パートを選択',
+  partSectionEn: 'SELECT PART',
+
+  paletteSectionJp: 'カラーパレット',
+  paletteSectionEn: 'COLOUR PALETTE',
+  paletteRedJp:   'レッド',
+  paletteMonoJp:  'モノクロ',
+  paletteIceJp:   'アイス',
+
+  qualitySectionJp: 'クオリティ',
+  qualitySectionEn: 'QUALITY',
+  qualityOpt1Jp:   'エヌジービーシー',
+  qualityOpt1En:   'NGBC',
+  qualityOpt2Jp:   'エイチディー',
+  qualityOpt2En:   'HD',
+
+  langSectionJp:  '言語設定',
+  langSectionEn:  'LANGUAGE',
+  langOpt1Jp:     '英語',
+  langOpt1En:     'EN',
+  langOpt2Jp:     '日本語',
+  langOpt2En:     'JP',
+
+  startJp:  'スタート',
+  startEn:  'START',
+  backBtn:  '← BACK TO MENU',
+};
+
+
+const tracks = [
+  { nameJp: '//トラック', nameEn: '1. //TRACK', artist: '//ARTIST', corrupted: true },
+  { nameJp: '//トラック', nameEn: '2. //TRACK', artist: '//ARTIST', corrupted: true },
+  { nameJp: '//トラック', nameEn: '3. //TRACK', artist: '//ARTIST with //OTHER ARTIST' },
+  { nameJp: '//トラック', nameEn: '4. //TRACK', artist: '//ARTIST', corrupted: false },
+  { nameJp: '//トラック', nameEn: '5. //TRACK', artist: '//ARTIST', corrupted: true },
+  { nameJp: '//トラック', nameEn: '6. //TRACK', artist: '//ARTIST with //OTHER ARTIST', corrupted: true },
+];
+
+// Song parts — shape: build | drop | fade
+const parts = [
+  { nameJp: 'パート１', nameEn: 'PART 1', shape: 'build' },
+  { nameJp: 'パート２', nameEn: 'PART 2', shape: 'drop' },
+  { nameJp: 'パート３', nameEn: 'PART 3', shape: 'fade', locked: true },
+];
+
+// Waveform loop (ms)
+const WAVE_LOOP_MS = 5000;
+
+// =============================================================
+//  END CONFIG
+// =============================================================
+
+const palettes = {
+  red:  { accent: '#8B1A1A', bright: '#c0392b', borderOuter: '#5a3a3a', borderInner: '#3a2a2a',
+          stripInnerBg: '#8B1A1A', stripOuterText: '#6a2a2a',
+          bannerBg: '#8B1A1A', bannerText: '#f0ece0',
+          filter: 'none' },
+  mono: { accent: '#222222', bright: '#d0cfc8', borderOuter: '#444444', borderInner: '#2a2a2a',
+          stripInnerBg: '#f0ece0', stripOuterText: '#f0ece0',
+          bannerBg: '#f0ece0', bannerText: '#0a0a0a',
+          filter: 'grayscale(1) brightness(0.88)' },
+  ice:  { accent: '#1a3a4a', bright: '#8ab4c8', borderOuter: '#2a4a5a', borderInner: '#1a2a3a',
+          stripInnerBg: '#1a3a4a', stripOuterText: '#2f5f75',
+          bannerBg: '#1a3a4a', bannerText: '#f0ece0',
+          filter: 'hue-rotate(195deg) saturate(0.65) brightness(1.08)' }
+};
+
+let selectedTrack = 0;
+let selectedPart = 0;
+let selectedQuality = 'NGBC';
+let currentPlayerTrack = 0;
+let playerAnimId = null;
+let asciiCols = 0, asciiRows = 0;
+const ASCII_RAMP = ' .·:+*xo0O#@█';
+const GLITCH_CHARS = '█▓▒░▐▌│┃╋▲▼◆■□×+#@%?!01';
+let corruptIntervals = [];
+let masterVolume = 0.40;
+
+// Cursor
+let cursorX = 0, cursorY = 0;
+
+// Video / ASCII
+let sampleCanvas, sampleCtx;
+let asciiCharW = 0, asciiCharH = 0;
+let asciiOffX = 0, asciiOffY = 0, asciiFont = '';
+// HD buffer
+let hdBuffer = null;
+
+// ===================== APPLY TEXT =====================
+function applyText() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  document.title = TEXT.pageTitle;
+  set('arc-top',      TEXT.arcTop);
+  set('arc-bottom',   TEXT.arcBottom);
+  set('badge-line-1', TEXT.badgeLine1);
+  set('badge-line-2', TEXT.badgeLine2);
+  set('press-start',  TEXT.pressStart);
+
+  // two units per span, animation moves -50%
+  const enUnit = (TEXT.scrollEn + '\u00a0\u00a0\u00a0\u00a0\u00a0').repeat(12);
+  const jpUnit = (TEXT.scrollJp + '\u00a0\u00a0\u00a0\u00a0\u00a0').repeat(10);
+  const enRep = enUnit + enUnit;
+  const jpRep = jpUnit + jpUnit;
+  ['sb-en-t','sb-en-b','sb-en-l','sb-en-r'].forEach(id => set(id, enRep));
+  ['sb-jp-t','sb-jp-b','sb-jp-l','sb-jp-r'].forEach(id => set(id, jpRep));
+
+  set('menu-subtitle-jp', TEXT.subtitleJp);
+  set('menu-artist-jp',   TEXT.artistJp);
+  set('menu-artist-en',   TEXT.artistEn);
+  set('track-section-jp', TEXT.trackSectionJp);
+  set('track-section-en', TEXT.trackSectionEn);
+  set('part-section-jp', TEXT.partSectionJp);
+  set('part-section-en', TEXT.partSectionEn);
+  set('palette-section-jp', TEXT.paletteSectionJp);
+  set('palette-section-en', TEXT.paletteSectionEn);
+  set('swatch-lbl-red',  TEXT.paletteRedJp);
+  set('swatch-lbl-mono', TEXT.paletteMonoJp);
+  set('swatch-lbl-ice',  TEXT.paletteIceJp);
+  set('quality-section-jp', TEXT.qualitySectionJp);
+  set('quality-section-en', TEXT.qualitySectionEn);
+  set('quality-opt1-jp', TEXT.qualityOpt1Jp);
+  set('quality-opt1-en', TEXT.qualityOpt1En);
+  set('quality-opt2-jp', TEXT.qualityOpt2Jp);
+  set('quality-opt2-en', TEXT.qualityOpt2En);
+  set('lang-section-jp', TEXT.langSectionJp);
+  set('lang-section-en', TEXT.langSectionEn);
+  set('lang-opt1-jp', TEXT.langOpt1Jp);
+  set('lang-opt1-en', TEXT.langOpt1En);
+  set('lang-opt2-jp', TEXT.langOpt2Jp);
+  set('lang-opt2-en', TEXT.langOpt2En);
+  set('start-jp', TEXT.startJp);
+  set('start-en', TEXT.startEn);
+  set('back-btn', TEXT.backBtn);
+
+  buildTracksGrid();
+  buildPartsRow();
+}
+
+function buildPartsRow() {
+  const row = document.getElementById('parts-row');
+  row.innerHTML = '';
+  parts.forEach((p, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'opt-wrap' + (p.locked ? ' locked' : '');
+    const btn = document.createElement('button');
+    btn.className = 'option-btn part-btn' +
+      (i === selectedPart && !p.locked ? ' selected' : '') +
+      (p.locked ? ' locked' : '');
+    btn.dataset.part = i;
+    btn.textContent = p.nameEn;
+    if (!p.locked) btn.onclick = () => selectPart(i);
+    wrap.innerHTML = `<span class="opt-jp">${p.nameJp}</span>`;
+    wrap.appendChild(btn);
+    row.appendChild(wrap);
+  });
+}
+
+function buildTracksGrid() {
+  const grid = document.getElementById('tracks-grid');
+  grid.innerHTML = '';
+  tracks.forEach((t, i) => {
+    const el = document.createElement('div');
+    el.className = 'track-item' +
+      (i === selectedTrack && !t.corrupted ? ' selected' : '') +
+      (t.corrupted ? ' corrupted' : '');
+    el.dataset.track = i;
+    if (!t.corrupted) el.onclick = () => selectTrack(i);
+    el.innerHTML = `<span class="track-jp">${t.nameJp}</span>${t.nameEn}`;
+    grid.appendChild(el);
+  });
+  startCorruptedGlitch();
+}
+
+// ===================== AUDIO =====================
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+}
+
+function setVolume(val) {
+  masterVolume = val / 100;
+}
+
+function playSound(type) {
+  initAudio();
+  if (!audioCtx) return;
+  const ctx = audioCtx, now = ctx.currentTime;
+  const v = masterVolume * 0.08; // max peak gain
+
+  if (type === 'confirm') {
+    [330, 440, 550, 660].forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square'; o.connect(g); g.connect(ctx.destination);
+      const t = now + i * 0.07;
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(v, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+      o.start(t); o.stop(t + 0.12);
+    });
+    return;
+  }
+
+  const osc = ctx.createOscillator(), gain = ctx.createGain();
+  osc.type = 'square'; osc.connect(gain); gain.connect(ctx.destination);
+
+  if (type === 'navigate') {
+    osc.frequency.setValueAtTime(220, now);
+    gain.gain.setValueAtTime(v, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+    osc.start(now); osc.stop(now + 0.08);
+  } else if (type === 'select') {
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(660, now + 0.05);
+    gain.gain.setValueAtTime(v, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+    osc.start(now); osc.stop(now + 0.14);
+  } else if (type === 'back') {
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.setValueAtTime(220, now + 0.06);
+    gain.gain.setValueAtTime(v, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+    osc.start(now); osc.stop(now + 0.14);
+  }
+}
+
+// ===================== KEYBOARD NAVIGATION =====================
+const NUM_GROUPS = 6;
+let menuFocusGroup = -1;
+let menuFocusIndex = 0;
+
+function clearFocus() { document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused')); }
+
+function getGroupItems(g) {
+  if (g === 0) return [...document.querySelectorAll('.track-item:not(.corrupted)')];
+  if (g === 1) return [...document.querySelectorAll('.part-btn:not(.locked)')];
+  if (g === 2) return [...document.querySelectorAll('.swatch-wrap')];
+  if (g === 3) return [...document.querySelectorAll('.quality-section .option-btn')];
+  if (g === 4) return [...document.querySelectorAll('.lang-section .option-btn')];
+  if (g === 5) return [document.querySelector('.start-btn')];
+  return [];
+}
+
+function applyFocus() {
+  if (menuFocusGroup < 0) return;
+  const items = getGroupItems(menuFocusGroup);
+  if (!items.length) return;
+  menuFocusIndex = Math.max(0, Math.min(menuFocusIndex, items.length - 1));
+  const el = items[menuFocusIndex];
+  el.classList.add('focused');
+  el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+document.addEventListener('keydown', e => {
+  const active = document.querySelector('.screen.active');
+  if (!active) return;
+
+  if (active.id === 'screen-title') {
+    if (['Enter',' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+      e.preventDefault(); titleClick();
+    }
+    return;
+  }
+
+  if (active.id === 'screen-menu') {
+    if (e.key === 'Escape') { e.preventDefault(); playSound('back'); goToTitle(); return; }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault(); clearFocus();
+      menuFocusGroup = menuFocusGroup < 0 ? 0 : (menuFocusGroup + 1) % NUM_GROUPS;
+      menuFocusIndex = 0; playSound('navigate'); applyFocus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault(); clearFocus();
+      menuFocusGroup = menuFocusGroup < 0 ? NUM_GROUPS-1 : (menuFocusGroup - 1 + NUM_GROUPS) % NUM_GROUPS;
+      menuFocusIndex = 0; playSound('navigate'); applyFocus();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault(); if (menuFocusGroup < 0) return;
+      const items = getGroupItems(menuFocusGroup); clearFocus();
+      menuFocusIndex = (menuFocusIndex + 1) % items.length; playSound('navigate'); applyFocus();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault(); if (menuFocusGroup < 0) return;
+      const items = getGroupItems(menuFocusGroup); clearFocus();
+      menuFocusIndex = (menuFocusIndex - 1 + items.length) % items.length; playSound('navigate'); applyFocus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault(); if (menuFocusGroup < 0) return;
+      getGroupItems(menuFocusGroup)[menuFocusIndex]?.click();
+    }
+    return;
+  }
+
+  if (active.id === 'screen-player') {
+    if (e.key === 'Escape') { e.preventDefault(); playSound('back'); goToMenu(); }
+  }
+});
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===================== CORRUPTED GLITCH =====================
+function startCorruptedGlitch() {
+  stopCorruptedGlitch();
+  document.querySelectorAll('.track-item.corrupted').forEach(el => {
+    const jpEl = el.querySelector('.track-jp');
+    const origJp = jpEl.textContent;
+    const textNode = [...el.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
+    const origEn = textNode ? textNode.textContent : '';
+    function glitchStr(str) {
+      return str.split('').map(c =>
+        c.trim() === '' ? c : (Math.random() < 0.3
+          ? GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)] : c)
+      ).join('');
+    }
+    const id = setInterval(() => {
+      jpEl.textContent = glitchStr(origJp);
+      if (textNode) textNode.textContent = glitchStr(origEn);
+    }, 130);
+    corruptIntervals.push(id);
+  });
+}
+
+function stopCorruptedGlitch() {
+  corruptIntervals.forEach(clearInterval);
+  corruptIntervals = [];
+}
+
+// ===================== NAVIGATION =====================
+function titleClick() { playSound('confirm'); goToMenu(); }
+
+function goToTitle() {
+  clearFocus(); menuFocusGroup = -1;
+  stopPlayer();
+  showScreen('screen-title');
+  const tv = document.getElementById('title-video');
+  if (tv.src) tv.play().catch(() => {});
+}
+
+function goToMenu() {
+  clearFocus(); menuFocusGroup = -1;
+  stopPlayer();
+  showScreen('screen-menu');
+  buildTracksGrid();
+  resetWaveform();
+}
+
+function goToPlayer() {
+  playSound('confirm');
+  currentPlayerTrack = selectedTrack;
+  stopCorruptedGlitch();
+  updatePlayerDisplay();
+  showScreen('screen-player');
+  startPlayer();
+}
+
+// ===================== TRACK / OPTIONS =====================
+function selectTrack(i) {
+  if (tracks[i]?.corrupted) return;
+  playSound('select');
+  selectedTrack = i;
+  document.querySelectorAll('.track-item').forEach(el => {
+    el.classList.toggle('selected', parseInt(el.dataset.track) === i);
+  });
+  resetWaveform();
+}
+
+function selectPart(i) {
+  if (parts[i]?.locked) return;
+  playSound('select');
+  selectedPart = i;
+  document.querySelectorAll('.part-btn').forEach(el => {
+    el.classList.toggle('selected', parseInt(el.dataset.part) === i);
+  });
+  resetWaveform();
+}
+
+// ===================== WAVEFORM =====================
+const WAVE_COLS = 20;  // bars
+const WAVE_HALF = 4;   // half height (blocks)
+const WAVE_PIX  = 2;   // block size
+const WAVE_GAP  = 1;   // bar gap
+let waveHeights = [];
+let waveStart = 0;
+
+// Envelopes, t = 0..1
+const WAVE_SHAPES = {
+  build: t => 0.15 + 0.85 * t * t,
+  drop:  t => 0.8 + 0.2 * Math.sin(t * Math.PI * 8),
+  fade:  t => 1 - 0.85 * t,
+};
+
+// Seeded per track/part
+function waveData(seed, shape) {
+  const envFn = WAVE_SHAPES[shape] || (t => 0.35 + 0.65 * Math.sin(Math.PI * t));
+  let s = seed >>> 0;
+  const rand = () => {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  return Array.from({ length: WAVE_COLS }, (_, i) => {
+    const env = envFn((i + 0.5) / WAVE_COLS);
+    return Math.max(0, Math.round(env * (0.3 + 0.7 * rand()) * WAVE_HALF));
+  });
+}
+
+function resetWaveform() {
+  waveHeights = waveData(selectedTrack * 31 + selectedPart * 7 + 1, parts[selectedPart]?.shape);
+  waveStart = performance.now();
+}
+
+function initWaveform() {
+  const c = document.getElementById('waveform');
+  c.width  = WAVE_COLS * (WAVE_PIX + WAVE_GAP) - WAVE_GAP;
+  c.height = (WAVE_HALF * 2 + 1) * WAVE_PIX;
+  resetWaveform();
+  requestAnimationFrame(renderWaveform);
+}
+
+function renderWaveform(now) {
+  requestAnimationFrame(renderWaveform);
+  if (!document.getElementById('screen-menu').classList.contains('active')) return;
+
+  const c = document.getElementById('waveform');
+  const ctx = c.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  const played   = css.getPropertyValue('--red-bright').trim();
+  const unplayed = css.getPropertyValue('--border-inner').trim();
+  const head     = css.getPropertyValue('--cream').trim();
+
+  const progress = ((now - waveStart) % WAVE_LOOP_MS) / WAVE_LOOP_MS;
+  const headX = Math.floor(progress * c.width);
+
+  ctx.clearRect(0, 0, c.width, c.height);
+  waveHeights.forEach((h, i) => {
+    const x = i * (WAVE_PIX + WAVE_GAP);
+    ctx.fillStyle = x + WAVE_PIX <= headX ? played : unplayed;
+    ctx.fillRect(x, (WAVE_HALF - h) * WAVE_PIX, WAVE_PIX, (h * 2 + 1) * WAVE_PIX);
+  });
+
+  ctx.fillStyle = head;
+  ctx.fillRect(headX, 0, 1, c.height);
+}
+
+function selectPalette(name, wrapper) {
+  playSound('select');
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+  wrapper.querySelector('.swatch').classList.add('selected');
+  const p = palettes[name];
+  document.documentElement.style.setProperty('--red', p.accent);
+  document.documentElement.style.setProperty('--red-bright', p.bright);
+  document.documentElement.style.setProperty('--border-outer', p.borderOuter);
+  document.documentElement.style.setProperty('--border-inner', p.borderInner);
+  document.documentElement.style.setProperty('--strip-inner-bg', p.stripInnerBg);
+  document.documentElement.style.setProperty('--strip-outer-text', p.stripOuterText);
+  document.documentElement.style.setProperty('--banner-bg', p.bannerBg);
+  document.documentElement.style.setProperty('--banner-text', p.bannerText);
+  document.documentElement.style.setProperty('--palette-filter', p.filter);
+  document.getElementById('ascii-display').style.color = p.bright;
+}
+
+function selectOption(btn, group) {
+  playSound('select');
+  btn.closest('.option-row').querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (group === 'quality') selectedQuality = btn.textContent.trim();
+}
+
+// ===================== PLAYER =====================
+function updatePlayerDisplay() {
+  const t = tracks[currentPlayerTrack];
+  document.getElementById('playerTrackName').textContent = t.nameEn.replace(/^\d+\.\s*/, '');
+  document.getElementById('playerArtist').textContent = t.artist;
+}
+
+function startPlayer() {
+  const video = document.getElementById('bg-video');
+  if (!hdBuffer) {
+    hdBuffer = document.createElement('canvas');
+    hdBuffer.width = 700; hdBuffer.height = 700;
+  }
+  document.getElementById('hd-canvas').style.display = 'block';
+  video.play().catch(() => {});
+
+  if (selectedQuality === 'HD') {
+    renderHD();
+  } else {
+    initAsciiSampler();
+    renderAscii();
+  }
+}
+
+function stopPlayer() {
+  if (playerAnimId) { cancelAnimationFrame(playerAnimId); playerAnimId = null; }
+  document.getElementById('bg-video').pause();
+  document.getElementById('hd-canvas').style.display = 'none';
+}
+
+// Cover-fit video into ctx
+function drawVideoCover(ctx, video, w, h) {
+  ctx.fillStyle = '#010101';
+  ctx.fillRect(0, 0, w, h);
+  if (video.readyState >= 2 && video.videoWidth > 0) {
+    const scale = Math.max(w / video.videoWidth, h / video.videoHeight);
+    const dw = video.videoWidth * scale, dh = video.videoHeight * scale;
+    ctx.drawImage(video, (w - dw) / 2, (h - dh) / 2, dw, dh);
+  }
+}
+
+// ===================== HD — video + heavy cursor glitch =====================
+function renderHD() {
+  const canvas = document.getElementById('hd-canvas');
+  if (!canvas || canvas.style.display === 'none') return;
+  const ctx   = canvas.getContext('2d');
+  const bctx  = hdBuffer.getContext('2d');
+  const video = document.getElementById('bg-video');
+
+  // 1. Video → buffer
+  drawVideoCover(bctx, video, 700, 700);
+
+  // 2. Cursor in canvas space
+  const appRect = document.getElementById('app').getBoundingClientRect();
+  const cx = (cursorX - appRect.left) / APP_SCALE;
+  const cy = (cursorY - appRect.top)  / APP_SCALE;
+  const inZone = cx >= 0 && cx <= 700 && cy >= 0 && cy <= 700;
+
+  if (!inZone) {
+    ctx.drawImage(hdBuffer, 0, 0);
+    playerAnimId = requestAnimationFrame(renderHD);
+    return;
+  }
+
+  const RADIUS = 40;
+  const zTop = Math.max(0,   cy - RADIUS);
+  const zBot = Math.min(700, cy + RADIUS);
+
+  // 3. Clean video outside zone
+  ctx.fillStyle = '#010101';
+  ctx.fillRect(0, 0, 700, 700);
+  if (zTop > 0)
+    ctx.drawImage(hdBuffer, 0, 0,    700, zTop,        0, 0,    700, zTop);
+  if (zBot < 700)
+    ctx.drawImage(hdBuffer, 0, zBot, 700, 700 - zBot,  0, zBot, 700, 700 - zBot);
+
+  // 4. Black zone
+  ctx.fillStyle = '#010101';
+  ctx.fillRect(0, zTop, 700, zBot - zTop);
+
+  // 5. Compressed strips
+  const numStrips = 3 + Math.floor(Math.random() * 4);
+  for (let s = 0; s < numStrips; s++) {
+    const srcY  = zTop + Math.random() * (zBot - zTop);
+    const srcH  = 1 + Math.random() * 10;
+    const compY = 0.05 + Math.random() * 0.45;
+    const destH = Math.max(0.5, srcH * compY);
+    const destY = zTop + Math.random() * (zBot - zTop - destH);
+    const offX  = (Math.random() - 0.5) * 30;
+    ctx.drawImage(hdBuffer, 0, srcY, 700, Math.max(1, srcH), offX, destY, 700, destH);
+  }
+
+  // 6. Chroma slice
+  if (Math.random() > 0.5) {
+    const sliceY    = zTop + Math.random() * (zBot - zTop);
+    const sliceH    = 1 + Math.random() * 6;
+    const shiftAmt  = 6 + Math.random() * 16;
+    ctx.drawImage(hdBuffer, 0, sliceY, 700, Math.max(1, sliceH),
+                 -shiftAmt, sliceY, 700, sliceH);
+  }
+
+  // 7. Scanlines
+  for (let f = 0; f < 1 + Math.floor(Math.random() * 2); f++) {
+    const fy = zTop + Math.random() * (zBot - zTop);
+    ctx.fillStyle = `rgba(255,255,255,${(Math.random() * 0.18).toFixed(3)})`;
+    ctx.fillRect(0, fy, 700, 1);
+  }
+
+  playerAnimId = requestAnimationFrame(renderHD);
+}
+
+// ===================== NGBC — ASCII rendered onto canvas =====================
+function initAsciiSampler() {
+  const FONT_SIZE = 7;
+  asciiCharH = FONT_SIZE * 1.18; // line height
+  asciiFont  = `${Math.round(asciiCharH)}px "Courier New", Courier, monospace`;
+
+  const canvas = document.getElementById('hd-canvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.font     = asciiFont;
+  asciiCharW   = ctx.measureText('M').width;
+
+  asciiCols = Math.ceil(700 / asciiCharW);
+  asciiRows = Math.ceil(700 / asciiCharH);
+  // centre grid
+  asciiOffX = (700 - asciiCols * asciiCharW) / 2;
+  asciiOffY = (700 - asciiRows * asciiCharH) / 2;
+
+  // Sample canvas at grid res
+  sampleCanvas        = document.createElement('canvas');
+  sampleCanvas.width  = asciiCols;
+  sampleCanvas.height = asciiRows;
+  sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+}
+
+function renderAscii() {
+  const canvas = document.getElementById('hd-canvas');
+  if (!canvas || canvas.style.display === 'none') return;
+
+  const ctx   = canvas.getContext('2d');
+  const video = document.getElementById('bg-video');
+
+  const bright = getComputedStyle(document.documentElement)
+                   .getPropertyValue('--red-bright').trim() || '#c0392b';
+
+  // Sample
+  let pixelData = null;
+  if (video.readyState >= 2 && video.videoWidth > 0) {
+    // cover-fit in px space, squash to grid
+    const gridW = asciiCols * asciiCharW, gridH = asciiRows * asciiCharH;
+    sampleCtx.setTransform(asciiCols / gridW, 0, 0, asciiRows / gridH, 0, 0);
+    drawVideoCover(sampleCtx, video, gridW, gridH);
+    sampleCtx.setTransform(1, 0, 0, 1, 0, 0);
+    try {
+      pixelData = sampleCtx.getImageData(0, 0, asciiCols, asciiRows).data;
+    } catch (_) { pixelData = null; }
+  }
+
+  // Build grid
+  const lines = [];
+  for (let r = 0; r < asciiRows; r++) {
+    let line = '';
+    for (let c = 0; c < asciiCols; c++) {
+      let idx = 0;
+      if (pixelData) {
+        const i    = (r * asciiCols + c) * 4;
+        const luma = 0.299 * pixelData[i] + 0.587 * pixelData[i+1] + 0.114 * pixelData[i+2];
+        idx = Math.min(ASCII_RAMP.length - 1, Math.floor(luma / 255 * ASCII_RAMP.length));
+      }
+      line += ASCII_RAMP[idx];
+    }
+    lines.push(line);
+  }
+
+  // Render
+  ctx.fillStyle = '#010101';
+  ctx.fillRect(0, 0, 700, 700);
+  ctx.font         = asciiFont;
+  ctx.fillStyle    = bright;
+  ctx.textBaseline = 'top';
+
+  for (let r = 0; r < asciiRows; r++) {
+    ctx.fillText(lines[r], asciiOffX, asciiOffY + r * asciiCharH);
+  }
+
+  playerAnimId = requestAnimationFrame(renderAscii);
+}
+
+// ===================== INIT =====================
+(function init() {
+  // Cursor
+  document.addEventListener('mousemove', e => {
+    cursorX = e.clientX; cursorY = e.clientY;
+    const cur = document.getElementById('cursor');
+    cur.style.left = cursorX + 'px';
+    cur.style.top  = cursorY + 'px';
+  });
+  document.addEventListener('mouseover', e => {
+    const isCorrupt = !!e.target.closest('.track-item.corrupted');
+    document.getElementById('cursor').classList.toggle('corrupt', isCorrupt);
+  });
+
+  document.getElementById('app').style.transform = `scale(${APP_SCALE})`;
+
+  applyText();
+  initWaveform();
+  if (TITLE_VIDEO_URL) {
+    const tv = document.getElementById('title-video');
+    tv.src = TITLE_VIDEO_URL;
+    tv.style.display = 'block';
+    tv.play().catch(() => {});
+  } else if (TITLE_SCREEN_IMAGE) {
+    const img = document.getElementById('titleBg');
+    img.src = TITLE_SCREEN_IMAGE; img.style.display = 'block';
+  }
+  if (VIDEO_URL) {
+    const video = document.getElementById('bg-video');
+    video.src = VIDEO_URL;
+    video.load();
+  }
+})();
+</script>
 </body>
 </html>
